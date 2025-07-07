@@ -7,7 +7,6 @@ import net.minecraft.text.Text;
 import net.minecraft.item.ItemStack;
 import java.util.List;
 import java.util.UUID;
-import com.example.restoreinv.MousePositionHelper;
 
 public class PlayerSavesScreen extends HandledScreen<PlayerSavesScreenHandler> {
     public PlayerSavesScreen(PlayerSavesScreenHandler handler, PlayerInventory inventory, Text title) {
@@ -50,7 +49,6 @@ public class PlayerSavesScreen extends HandledScreen<PlayerSavesScreenHandler> {
     @Override
     protected void init() {
         super.init();
-        MousePositionHelper.restore();
     }
 
     @Override
@@ -59,7 +57,6 @@ public class PlayerSavesScreen extends HandledScreen<PlayerSavesScreenHandler> {
         double[] xpos = new double[1];
         double[] ypos = new double[1];
         org.lwjgl.glfw.GLFW.glfwGetCursorPos(window, xpos, ypos);
-        MousePositionHelper.save(xpos[0], ypos[0]);
         super.removed();
     }
 

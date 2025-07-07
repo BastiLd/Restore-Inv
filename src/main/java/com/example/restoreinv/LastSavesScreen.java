@@ -10,7 +10,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.GameRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.example.restoreinv.MousePositionHelper;
 
 public class LastSavesScreen extends HandledScreen<LastSavesScreenHandler> {
     private static final Identifier VANILLA_BG = Identifier.of("minecraft", "textures/gui/container/inventory.png");
@@ -95,7 +94,6 @@ public class LastSavesScreen extends HandledScreen<LastSavesScreenHandler> {
     @Override
     protected void init() {
         super.init();
-        MousePositionHelper.restore();
     }
 
     @Override
@@ -104,7 +102,6 @@ public class LastSavesScreen extends HandledScreen<LastSavesScreenHandler> {
         double[] xpos = new double[1];
         double[] ypos = new double[1];
         org.lwjgl.glfw.GLFW.glfwGetCursorPos(window, xpos, ypos);
-        MousePositionHelper.save(xpos[0], ypos[0]);
         super.removed();
     }
 
