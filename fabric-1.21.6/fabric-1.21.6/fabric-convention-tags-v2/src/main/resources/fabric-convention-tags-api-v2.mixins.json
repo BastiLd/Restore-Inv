@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "net.fabricmc.fabric.mixin.tag.convention",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "TagKeyMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

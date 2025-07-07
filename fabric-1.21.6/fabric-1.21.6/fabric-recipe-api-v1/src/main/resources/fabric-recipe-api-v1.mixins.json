@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "net.fabricmc.fabric.mixin.recipe",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ServerRecipeManagerMixin",
+    "ingredient.ClientConnectionMixin",
+    "ingredient.EncoderHandlerMixin",
+    "ingredient.IngredientMixin",
+    "ingredient.ShapelessRecipeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.fabricmc.fabric.mixin.itemgroup",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ItemGroupAccessor",
+    "ItemGroupMixin",
+    "ItemGroupsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "net.fabricmc.fabric.mixin.resource.conditions",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "DataPackContentsMixin",
+    "DataProviderMixin",
+    "JsonDataLoaderMixin",
+    "RegistryLoaderMixin",
+    "RegistryOpsAccessor",
+    "ReloadableRegistriesMixin",
+    "ResourceFinderAccessor",
+    "ResourcePackProfileMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

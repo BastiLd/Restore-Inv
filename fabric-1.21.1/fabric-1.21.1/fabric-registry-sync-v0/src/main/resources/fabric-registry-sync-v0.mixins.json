@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "package": "net.fabricmc.fabric.mixin.registry.sync",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "BootstrapMixin",
+    "ChunkSerializerMixin",
+    "DebugChunkGeneratorAccessor",
+    "ExperimentalRegistriesValidatorMixin",
+    "IdListMixin",
+    "MainMixin",
+    "RegistriesAccessor",
+    "RegistriesMixin",
+    "RegistryKeysMixin",
+    "RegistryLoaderMixin",
+    "SaveLoadingMixin",
+    "SerializableRegistriesMixin",
+    "SimpleRegistryAccessor",
+    "SimpleRegistryMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

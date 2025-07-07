@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "net.fabricmc.fabric.mixin.client.indigo.renderer",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "net.fabricmc.fabric.impl.client.indigo.IndigoMixinConfigPlugin",
+  "mixins": [
+  ],
+  "client": [
+    "BlockModelRendererMixin",
+    "ChunkRendererRegionMixin",
+    "ItemRendererAccessor",
+    "ItemRendererMixin",
+    "SectionBuilderMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
