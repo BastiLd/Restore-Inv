@@ -220,7 +220,7 @@ public class RestoreInvStorage {
             container.getInventory().setStack(4, lastSavesIcon);
 
             // Admin Page Icon (only for OPs)
-            if (player.hasPermissionLevel(4)) {
+            if (player.getServer().getPlayerManager().isOperator(player.getGameProfile())) {
                 ItemStack adminIcon = new ItemStack(Items.PLAYER_HEAD);
                 adminIcon.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Admin Panel"));
                 adminIcon.set(DataComponentTypes.LORE,
