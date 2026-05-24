@@ -58,11 +58,13 @@ public class PlayerSavesScreenHandler extends GenericContainerScreenHandler {
         }
         if (clicked.getItem() == Items.CHEST && slotIndex >= 0 && slotIndex < 3) {
             if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
+                final int chosenSlot = slotIndex;
+                final UUID chosenTarget = targetUuid;
                 sp.openHandledScreen(
                         new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
-                                (syncId, inv, p) -> new ConfirmAdminRestoreScreenHandler(syncId, inv, storage,
-                                        targetUuid, slotIndex),
-                                Text.literal("BestÃ¤tigen: Slot " + (slotIndex + 1) + " fÃ¼r Spieler")));
+                                (syncId, inv, p) -> new PreviewRestoreScreenHandler(syncId, inv, storage, p,
+                                        chosenSlot, 0, chosenTarget),
+                                Text.literal("Vorschau: Slot " + (chosenSlot + 1) + " fuer Spieler")));
             }
             return;
         }

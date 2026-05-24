@@ -1,68 +1,25 @@
+// Root build: kein eigener Code, sammelt nur die JARs aller
+// Multi-Version-Subprojekte unter build/libs/ ein.
+
 plugins {
-    id 'fabric-loom' version '1.16.2'
-    id 'maven-publish'
-    id 'java'
+    id 'base'
 }
 
-// Optionale lokale Overrides aus gradle-local.properties.
-// Praktisch z. B. fuer org.gradle.java.home, ohne dass es ins Repo wandert.
-def localProps = file('gradle-local.properties')
-if (localProps.exists()) {
-    def p = new Properties()
-    localProps.withInputStream { p.load(it) }
-    p.each { k, v -> ext.set(k as String, v as String) }
-}
+def collectArtifacts = tasks.register('collectArtifacts', Copy) {
+    group = 'build'
+    description = 'Kopiert die remappten JARs aller Subprojekte nach build/libs/.'
 
-// Alle Versionen kommen aus gradle.properties.
-group   = project.mod_group
-version = project.mod_version
-base.archivesName = project.mod_archives_name
+    destinationDir = file("$buildDir/libs")
+    doFirst { destinationDir.mkdirs() }
 
-repositories {
-    maven {
-        name = 'Fabric'
-        url  = 'https://maven.fabricmc.net/'
-    }
-    mavenCentral()
-}
-
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings  "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-    withSourcesJar()
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-    options.release = 21
-}
-
-// fabric.mod.json bekommt Version + ID automatisch beim Build.
-processResources {
-    inputs.property 'version', project.mod_version
-    inputs.property 'mod_id',  project.mod_id
-
-    filesMatching('fabric.mod.json') {
-        expand 'version': project.mod_version,
-               'mod_id':  project.mod_id
+    subprojects.each { sub ->
+        from(sub.layout.buildDirectory.dir('libs')) {
+            include '*.jar'
+        }
+        dependsOn "${sub.path}:build"
     }
 }
 
-// JAR-Metadaten beziehen ihre Werte aus gradle.properties.
-tasks.withType(Jar).configureEach {
-    archiveBaseName.set(project.mod_archives_name)
-    archiveVersion.set(project.mod_version)
-
-    from('LICENSE') {
-        rename { "${it}_${project.mod_archives_name}" }
-    }
+tasks.named('build') {
+    dependsOn collectArtifacts
 }

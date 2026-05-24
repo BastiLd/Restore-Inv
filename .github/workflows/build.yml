@@ -30,7 +30,7 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Build
+      - name: Build all versions
         run: ./gradlew build --no-daemon
 
       - name: Upload artifact

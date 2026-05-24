@@ -1,60 +1,78 @@
 # Restore Inventory
 
-Fabric-Mod fuer Minecraft, die den Spieler-Inventarstand sichert und
-wiederherstellen kann.
+Fabric-Mod fuer Minecraft, die das Spieler-Inventar regelmaessig sichert und
+spaeter wiederhergestellen kann (z. B. wenn man in Lava faellt).
 
-| Aktuelle Version | Minecraft | Fabric Loader | Fabric API |
-| ---------------- | --------- | ------------- | ---------- |
-| siehe `gradle.properties` `mod_version` | 1.21.11 | 0.19.2 | 0.141.4+1.21.11 |
+Unterstuetzt mehrere Minecraft-Versionen parallel. Fuer jede unterstuetzte
+Version gibt es ein eigenes Subprojekt unter `versions/<mc>/`.
 
----
+## Unterstuetzte Versionen
+
+| Minecraft | Subprojekt-Pfad      | JAR-Name                                    |
+| --------- | -------------------- | ------------------------------------------- |
+| 1.21.1    | `versions/1.21.1/`   | `RestoreInventory-mc1.21.1-<version>.jar`   |
+| 1.21.11   | `versions/1.21.11/`  | `RestoreInventory-mc1.21.11-<version>.jar`  |
+
+Die Mod-Version (`mod_version` in `gradle.properties` ganz oben) ist
+**fuer alle Subprojekte gleich**. Die Minecraft-/Fabric-Versionen sind
+**pro Subprojekt** in `versions/<mc>/gradle.properties` festgelegt.
 
 ## Build
 
+Multi-Version-Build mit einem Befehl:
+
 ```bash
 ./gradlew build           # Linux / macOS / Git Bash
-.\gradlew.bat build        # Windows CMD / PowerShell
+.\gradlew.bat build       # Windows
 ```
 
-Die fertige JAR landet in `build/libs/`.
+JARs liegen am Ende sowohl in `build/libs/` (alle Versionen gesammelt)
+als auch unter `versions/<mc>/build/libs/` (pro Version).
 
-Voraussetzungen: JDK 21 (Gradle holt sich sonst automatisch eines per Toolchain).
+Nur eine Version bauen:
+
+```bash
+./gradlew :mc-1.21.1:build
+./gradlew :mc-1.21.11:build
+```
+
+Voraussetzung: JDK 21. Gradle holt sich sonst per Toolchain ein passendes.
 
 ## Mod-Version erhoehen
 
-Alle Versionen liegen ausschliesslich in `gradle.properties`. Erhoehen mit:
-
 ```bash
-python bump_version.py            # patch +1   (Standard)
-python bump_version.py minor      # 2.0.5 -> 2.1.0
-python bump_version.py major      # 2.0.5 -> 3.0.0
-python bump_version.py 3.1.4      # explizit setzen
-python bump_version.py patch --tag     # zusaetzlich Git-Tag v<version>
-python bump_version.py patch --commit  # Commit + Tag in einem Schritt
+python bump_version.py            # patch +1
+python bump_version.py minor      # 2.2.0 -> 2.3.0
+python bump_version.py major      # 2.2.0 -> 3.0.0
+python bump_version.py 3.1.4      # explizit
+python bump_version.py patch --tag      # zusaetzlich Git-Tag v<version>
+python bump_version.py patch --commit   # Commit + Tag in einem Schritt
 ```
 
-Anschliessend `git push --follow-tags` -- die GitHub-Action baut dann
-automatisch ein Release mit angehaengter JAR.
+Anschliessend `git push --follow-tags`, dann baut die GitHub-Action und
+haengt **alle JARs aller Versionen** ans Release.
 
-## Auf neuere Minecraft-Version anheben
+## Fabric-Versionen aktualisieren
 
-Holt aktuelle Versionen via Fabric-Meta- und Modrinth-API:
-
-```bash
-python update_fabric.py            # neueste stabile MC-Version
-python update_fabric.py 1.21.11    # explizit
-python update_fabric.py --dry-run  # nur anzeigen
-```
-
-## Builds fuer mehrere Minecraft-Versionen
+Holt aktuelle Yarn/Loader/Fabric-API-Versionen via fabric-meta + Modrinth:
 
 ```bash
-./multi-build.sh                                  # Defaults
-./multi-build.sh 1.21.7 1.21.11
-.\multi-build.ps1 -Versions '1.21.7','1.21.11'   # Windows
+python update_fabric.py            # alle Subprojekte aktualisieren
+python update_fabric.py 1.21.11    # nur eine Version
+python update_fabric.py --dry-run
 ```
 
-JARs landen in `builds/<mc>/`.
+## Eine neue Minecraft-Version hinzufuegen
+
+1. Verzeichnis `versions/<mc>/` mit Standardstruktur anlegen
+   (`src/main/java`, `src/main/resources/fabric.mod.json`, `gradle.properties`,
+   `build.gradle`).
+2. `python update_fabric.py <mc>` fuer die korrekten Yarn/Loader/API-Werte.
+3. Code aus einer benachbarten Version kopieren und an die API-Brueche
+   anpassen.
+
+Das Build-System erkennt das neue Subprojekt automatisch — `settings.gradle`
+inkludiert alle Verzeichnisse unter `versions/`.
 
 ## Manuelles Backup
 
@@ -62,21 +80,18 @@ JARs landen in `builds/<mc>/`.
 ./backup.sh
 ```
 
-Erstellt einen Commit mit Zeitstempel und pusht ihn. Funktioniert in jedem
-geklonten Repo, der Pfad wird automatisch erkannt.
+## Release-Workflow
+
+1. `python bump_version.py minor --commit`
+2. `git push --follow-tags`
+3. GitHub-Action baut alle Versionen und legt das Release samt JARs an.
 
 ## Lokales JDK setzen (optional)
 
-Wenn Gradle dein JDK nicht findet, lege `gradle-local.properties` an:
+Falls Gradle dein JDK nicht findet, lege `gradle-local.properties` an:
 
 ```properties
 org.gradle.java.home=C:\\Program Files\\Java\\jdk-21
 ```
 
 Die Datei ist via `.gitignore` ausgeschlossen.
-
-## Release-Workflow auf einen Blick
-
-1. `python bump_version.py minor --commit`
-2. `git push --follow-tags`
-3. GitHub-Action baut und legt Release samt JAR an.

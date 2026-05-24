@@ -86,12 +86,15 @@ public class LastSavesScreenHandler extends GenericContainerScreenHandler {
         if (slotIndex >= 0 && slotIndex < 27) {
             if (clickedStack.getItem() == Items.CHEST) {
                 int slot = slotIndex / 9;
-                int saveIndex = slotIndex % 9;
+                int saveIndex = (slotIndex % 9) - 3; // CENTERED_SLOTS sind {3,4,5} pro Reihe
+                if (saveIndex < 0 || saveIndex > 2) {
+                    return;
+                }
                 if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
                     sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                            (syncId, inv, p) -> new ConfirmRestoreScreenHandler(syncId, inv, storage, slot,
-                                    saveIndex),
-                            Text.literal("BestÃ¤tigen: Slot " + (slot + 1) + " Save " + (saveIndex + 1))));
+                            (syncId, inv, p) -> new PreviewRestoreScreenHandler(syncId, inv, storage, p,
+                                    slot, saveIndex, null),
+                            Text.literal("Vorschau: Slot " + (slot + 1) + " Save " + (saveIndex + 1))));
                 }
                 return;
             }
