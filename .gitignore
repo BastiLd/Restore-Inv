@@ -36,3 +36,7 @@ fabric-*.zip
 # OS
 Thumbs.db
 .DS_Store
+
+# Lokale Hilfsskripte / Logs
+_*.py
+action_log.*
