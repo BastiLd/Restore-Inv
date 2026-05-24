@@ -41,13 +41,16 @@ public class ConfirmAdminRestoreScreenHandler extends GenericContainerScreenHand
         ItemStack clicked = this.getInventory().getStack(slotIndex);
         if (clicked.getItem() == Items.LIME_WOOL) {
             // Confirm: restore to target player
-            if (player.getServer() != null) {
-                ServerPlayerEntity target = player.getServer().getPlayerManager().getPlayer(targetUuid);
-                if (target != null) {
-                    storage.restoreInventoryFromSave(target, slot, 0);
-                    player.sendMessage(Text.literal("Inventar wiederhergestellt!"), false);
-                } else {
-                    player.sendMessage(Text.literal("Spieler nicht online!"), false);
+            if (player instanceof ServerPlayerEntity acting) {
+                net.minecraft.server.MinecraftServer server = acting.getEntityWorld().getServer();
+                if (server != null) {
+                    ServerPlayerEntity target = server.getPlayerManager().getPlayer(targetUuid);
+                    if (target != null) {
+                        storage.restoreInventoryFromSave(target, slot, 0);
+                        player.sendMessage(Text.literal("Inventar wiederhergestellt!"), false);
+                    } else {
+                        player.sendMessage(Text.literal("Spieler nicht online!"), false);
+                    }
                 }
             }
             if (player instanceof ServerPlayerEntity sp) {
