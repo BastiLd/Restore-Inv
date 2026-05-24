@@ -1,0 +1,11 @@
+// Verbindet das aktuelle Subprojekt mit einem geteilten Source-Tree unter
+// shared/<sharedSourceTree>/. Ueblich: ext.sharedSourceTree = 'api-old' oder 'api-new'.
+
+def sharedRoot = rootProject.file("shared/${project.ext.sharedSourceTree}")
+
+sourceSets {
+    main {
+        java.srcDirs = [ "${sharedRoot}/src/main/java" ]
+        resources.srcDirs = [ "${sharedRoot}/src/main/resources" ]
+    }
+}
