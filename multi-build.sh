@@ -1,26 +1,28 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Baut die Mod fuer mehrere Minecraft-Versionen.
+# Versionen werden per update_fabric.py gesetzt, am Ende wird die
+# urspruengliche gradle.properties wiederhergestellt.
 
-# Liste der gewünschten Minecraft-Versionen
-versions=("1.21.2" "1.21.3" "1.21.4" "1.21.5" "1.21.6" "1.21.7")
+set -euo pipefail
 
-# Backup der originalen build.gradle
-cp build.gradle build.gradle.bak
+cd "$(dirname "$0")"
 
-for v in "${versions[@]}"
-do
-    echo "Baue für Minecraft $v ..."
-    # Passe die Version in build.gradle an (ggf. Zeile anpassen, falls anders bei dir!)
-    sed -i "s/minecraft_version = \".*\"/minecraft_version = \"$v\"/g" build.gradle
+versions=("${@:-1.21.4 1.21.6 1.21.7 1.21.11}")
 
-    # Baue die Mod mit gradlew.bat (Windows)
-    ./gradlew.bat build
+cp gradle.properties gradle.properties.bak
+trap 'mv gradle.properties.bak gradle.properties' EXIT
 
-    # Lege die gebaute JAR in einen eigenen Ordner ab
-    mkdir -p builds/$v
-    cp build/libs/*.jar builds/$v/
+for v in "${versions[@]}"; do
+  echo
+  echo "==> Baue fuer Minecraft $v"
+
+  python update_fabric.py "$v"
+  ./gradlew build --no-daemon
+
+  mkdir -p "builds/$v"
+  cp build/libs/*.jar "builds/$v/"
+  echo "    JARs in builds/$v"
 done
 
-# Stelle die originale build.gradle wieder her
-mv build.gradle.bak build.gradle
-
-echo "Fertig! Alle Builds liegen in den jeweiligen builds/<version>-Ordnern."
+echo
+echo "Fertig. Builds liegen unter builds/<version>/"

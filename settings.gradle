@@ -1,9 +1,18 @@
 pluginManagement {
     repositories {
-        // Hier werden die Plugins (inkl. fabric-loom) aufgelöst
-        maven { url = 'https://maven.fabricmc.net/' }
+        maven {
+            name = 'Fabric'
+            url  = 'https://maven.fabricmc.net/'
+        }
         gradlePluginPortal()
         mavenCentral()
     }
 }
+
+// Sorgt dafuer, dass Gradle ein passendes JDK 21 selbst herunterlaedt,
+// falls der Java-Toolchain-Block in build.gradle keines findet.
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.10.0'
+}
+
 rootProject.name = 'RestoreInventory'

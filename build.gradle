@@ -1,41 +1,68 @@
 plugins {
-    // Die korrekte Loom-Version und Publishing, falls benötigt
-    id 'fabric-loom' version '1.10.1'
+    id 'fabric-loom' version '1.16.2'
     id 'maven-publish'
+    id 'java'
 }
 
-group = 'com.example'
-version = '2.0.1'
+// Optionale lokale Overrides aus gradle-local.properties.
+// Praktisch z. B. fuer org.gradle.java.home, ohne dass es ins Repo wandert.
+def localProps = file('gradle-local.properties')
+if (localProps.exists()) {
+    def p = new Properties()
+    localProps.withInputStream { p.load(it) }
+    p.each { k, v -> ext.set(k as String, v as String) }
+}
+
+// Alle Versionen kommen aus gradle.properties.
+group   = project.mod_group
+version = project.mod_version
+base.archivesName = project.mod_archives_name
 
 repositories {
-    // Normale Artefakt-Repos
-    maven { url = 'https://maven.fabricmc.net/' }
+    maven {
+        name = 'Fabric'
+        url  = 'https://maven.fabricmc.net/'
+    }
     mavenCentral()
 }
 
 dependencies {
-    // Minecraft & Yarn-Mappings
-    minecraft 'com.mojang:minecraft:1.21.7'
-    mappings 'net.fabricmc:yarn:1.21.7+build.1:v2'
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings  "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 
-    // Fabric Loader and API
-    modImplementation 'net.fabricmc:fabric-loader:0.16.4'
-    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.119.3+1.21.7'
-    modImplementation "net.fabricmc.fabric-api:fabric-screen-handler-api-v1"
-    modImplementation "net.fabricmc.fabric-api:fabric-api-base"
-    modImplementation "net.fabricmc.fabric-api:fabric-api"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
 java {
-    // Stelle sicher, dass Gradle Java 21 verwendet
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
     withSourcesJar()
 }
 
-// Optional: jar-Metadaten
-tasks.withType(Jar) {
-    archiveBaseName.set('RestoreInventory')
-    archiveVersion.set('1.0.0')
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+// fabric.mod.json bekommt Version + ID automatisch beim Build.
+processResources {
+    inputs.property 'version', project.mod_version
+    inputs.property 'mod_id',  project.mod_id
+
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.mod_version,
+               'mod_id':  project.mod_id
+    }
+}
+
+// JAR-Metadaten beziehen ihre Werte aus gradle.properties.
+tasks.withType(Jar).configureEach {
+    archiveBaseName.set(project.mod_archives_name)
+    archiveVersion.set(project.mod_version)
+
+    from('LICENSE') {
+        rename { "${it}_${project.mod_archives_name}" }
+    }
 }
