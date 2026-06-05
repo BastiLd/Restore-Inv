@@ -80,17 +80,19 @@ public class PreviewRestoreScreenHandler extends GenericContainerScreenHandler {
         }
 
         ItemStack confirm = new ItemStack(Items.LIME_WOOL);
-        String confirmTitle = "Inventar wiederherstellen";
-        if (save != null) confirmTitle += " (" + RestoreInvStorage.formatRelativeTime(save.timestampMillis) + ")";
-        confirm.set(DataComponentTypes.CUSTOM_NAME, Text.literal(confirmTitle));
+        Text confirmTitle = save != null
+                ? Text.translatable("restoreinv.preview.confirm_time",
+                        RestoreInvStorage.formatRelativeTime(save.timestampMillis))
+                : Text.translatable("restoreinv.preview.confirm");
+        confirm.set(DataComponentTypes.CUSTOM_NAME, confirmTitle);
         confirm.set(DataComponentTypes.LORE, new LoreComponent(List.of(
-                Text.literal("Klicke, um dieses Inventar zu uebernehmen."))));
+                Text.translatable("restoreinv.preview.confirm_desc"))));
         grid.setStack(CONFIRM_SLOT, confirm);
 
         ItemStack cancel = new ItemStack(Items.RED_WOOL);
-        cancel.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Zurueck"));
+        cancel.set(DataComponentTypes.CUSTOM_NAME, Text.translatable("restoreinv.gui.back"));
         cancel.set(DataComponentTypes.LORE, new LoreComponent(List.of(
-                Text.literal("Klicke, um zur Liste zurueckzukehren."))));
+                Text.translatable("restoreinv.preview.cancel_desc"))));
         grid.setStack(CANCEL_SLOT, cancel);
     }
 
@@ -106,20 +108,25 @@ public class PreviewRestoreScreenHandler extends GenericContainerScreenHandler {
                 if (player instanceof ServerPlayerEntity sp) {
                     if (targetUuid == null) {
                         if (!storage.canRestore(sp)) {
-                            sp.sendMessage(Text.literal("Du hast keine Rechte zum Wiederherstellen."), false);
+                            sp.sendMessage(Text.translatable("restoreinv.msg.no_permission_restore"), false);
                             return;
                         }
                         storage.restoreInventoryFromSave(sp, slot, saveIndex);
-                        sp.sendMessage(Text.literal("Inventar wiederhergestellt!"), false);
+                        sp.sendMessage(Text.translatable("restoreinv.msg.restored"), false);
                     } else {
-                        net.minecraft.server.MinecraftServer server = sp.getEntityWorld().getServer();
+                        // Admin-Modus: fremdes Inventar wiederherstellen -> Admin-Recht noetig.
+                        if (!PermissionGate.canAdminister(sp)) {
+                            sp.sendMessage(Text.translatable("restoreinv.msg.no_permission_action"), false);
+                            return;
+                        }
+                        net.minecraft.server.MinecraftServer server = PlatformCompat.serverOf(sp);
                         if (server != null) {
                             ServerPlayerEntity target = server.getPlayerManager().getPlayer(targetUuid);
                             if (target != null) {
                                 storage.restoreInventoryFromSave(target, slot, saveIndex);
-                                sp.sendMessage(Text.literal("Inventar des Spielers wiederhergestellt!"), false);
+                                sp.sendMessage(Text.translatable("restoreinv.msg.restored_other"), false);
                             } else {
-                                sp.sendMessage(Text.literal("Spieler nicht online!"), false);
+                                sp.sendMessage(Text.translatable("restoreinv.msg.player_offline"), false);
                             }
                         }
                     }
@@ -132,12 +139,12 @@ public class PreviewRestoreScreenHandler extends GenericContainerScreenHandler {
                     if (targetUuid == null) {
                         sp.openHandledScreen(new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
                                 (syncId, inv, p) -> new LastSavesScreenHandler(syncId, inv, storage, p),
-                                Text.literal("Last Saves")));
+                                Text.translatable("restoreinv.gui.last_saves")));
                     } else {
                         UUID t = targetUuid;
                         sp.openHandledScreen(new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
                                 (syncId, inv, p) -> new PlayerSavesScreenHandler(syncId, inv, storage, p, t),
-                                Text.literal("Player Saves")));
+                                Text.translatable("restoreinv.gui.player_saves")));
                     }
                 }
                 return;

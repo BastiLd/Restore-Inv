@@ -9,6 +9,7 @@ import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.LoreComponent;
@@ -17,9 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * 9x3 GUI: Slot 0 = Zurueck, Slots 1..26 = bekannte Spieler-UUIDs zum Auswaehlen.
- */
 public class AdminPanelScreenHandler extends GenericContainerScreenHandler {
     public final RestoreInvStorage storage;
     public final PlayerEntity player;
@@ -35,19 +33,19 @@ public class AdminPanelScreenHandler extends GenericContainerScreenHandler {
 
     private void populate() {
         ItemStack back = new ItemStack(Items.ARROW);
-        back.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Zurueck"));
+        back.set(DataComponentTypes.CUSTOM_NAME, Text.translatable("restoreinv.gui.back"));
         this.getInventory().setStack(0, back);
 
         slotToUuid.clear();
         int idx = 1;
-        for (UUID uuid : storage.lastSaves.keySet()) {
+        for (UUID uuid : storage.getKnownPlayers()) {
             if (idx >= this.getInventory().size()) break;
             ItemStack head = new ItemStack(Items.PLAYER_HEAD);
             String name = resolveDisplayName(uuid);
             head.set(DataComponentTypes.CUSTOM_NAME, Text.literal(name));
             head.set(DataComponentTypes.LORE, new LoreComponent(List.of(
-                    Text.literal("UUID: " + uuid.toString()),
-                    Text.literal("Klicke fuer Saves dieses Spielers"))));
+                    Text.translatable("restoreinv.gui.player_uuid", uuid.toString()),
+                    Text.translatable("restoreinv.gui.player_saves_hint"))));
             this.getInventory().setStack(idx, head);
             slotToUuid.add(uuid);
             idx++;
@@ -55,17 +53,14 @@ public class AdminPanelScreenHandler extends GenericContainerScreenHandler {
     }
 
     private String resolveDisplayName(UUID uuid) {
-        if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp && sp.getServer() != null) {
-            net.minecraft.server.network.ServerPlayerEntity online =
-                    sp.getServer().getPlayerManager().getPlayer(uuid);
-            if (online != null) return online.getGameProfile().getName();
-            // UserCache fuer offline-Spieler
-            try {
-                return sp.getServer().getUserCache().getByUuid(uuid)
-                        .map(p -> p.getName())
-                        .orElse(uuid.toString().substring(0, 8));
-            } catch (Throwable t) {
-                return uuid.toString().substring(0, 8);
+        if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
+            MinecraftServer s = PlatformCompat.serverOf(sp);
+            if (s != null) {
+                net.minecraft.server.network.ServerPlayerEntity online = s.getPlayerManager().getPlayer(uuid);
+                if (online != null) {
+                    String n = PlatformCompat.profileName(online.getGameProfile());
+                    if (n != null && !n.isEmpty()) return n;
+                }
             }
         }
         return uuid.toString().substring(0, 8);
@@ -73,6 +68,11 @@ public class AdminPanelScreenHandler extends GenericContainerScreenHandler {
 
     @Override
     public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
+        // Admin-Panel ist rein administrativ: nur Berechtigte duerfen interagieren.
+        if (!(player instanceof net.minecraft.server.network.ServerPlayerEntity admin)
+                || !PermissionGate.canAdminister(admin)) {
+            return;
+        }
         if (slotIndex == 0) {
             if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
                 storage.openConfigScreen(sp);
@@ -85,7 +85,7 @@ public class AdminPanelScreenHandler extends GenericContainerScreenHandler {
         if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
             sp.openHandledScreen(new SimpleNamedScreenHandlerFactory(
                     (syncId, inv, p) -> new PlayerSavesScreenHandler(syncId, inv, storage, p, target),
-                    Text.literal("Player Saves")));
+                    Text.translatable("restoreinv.gui.player_saves")));
         }
     }
 }

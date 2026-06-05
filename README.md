@@ -5,52 +5,106 @@ spaeter wiederhergestellen kann (z. B. wenn man in Lava faellt).
 
 ## Features
 
-- Drei Save-Slots pro Spieler, jeweils mit Ringpuffer der letzten N Saves.
-- Auto-Save alle X Minuten in Slot 1 / 2 (konfigurierbar).
-- **Auto-Save direkt vor dem Tod** in Slot 3 (`ServerLivingEntityEvents.ALLOW_DEATH`).
+- Vier Save-Slots pro Spieler, jeweils mit Ringpuffer der letzten N Saves:
+  **Auto (kurz)**, **Auto (lang)**, **Manuell** und ein eigener **Tod**-Slot.
+- Auto-Save alle X Minuten in die beiden Auto-Slots (konfigurierbar).
+- **Auto-Save direkt vor dem Tod** in den eigenen Tod-Slot
+  (`ServerLivingEntityEvents.ALLOW_DEATH`) - verdraengt keine manuellen Saves mehr.
+- **Restore-Undo**: `/restoreinv undo` macht die letzte Wiederherstellung
+  rueckgaengig (vor jedem Restore wird das aktuelle Inventar gesichert).
 - **Inventar-Vorschau**: Klick auf einen Save zeigt Ruestung, Hauptinventar,
   Hotbar und Offhand in einer 9x6-GUI bevor wirklich wiederhergestellt wird.
-- **Tooltips mit Zeitstempel**: "Vor 3 Min", "Vor 17 Min" usw. plus Item-Anzahl
-  und das beste Tool ("Top-Tool").
-- **Pin-Funktion**: Rechtsklick auf einen Save markiert ihn als geschuetzt.
-  Gepinnte Saves werden vom Ringpuffer nicht ueberschrieben.
-- **Konfigurierbare Saves pro Slot** (1..9).
-- **Restore-Sound** (an/aus).
-- **OP-Restore-Pflicht** (an/aus): wenn an, koennen nur OPs Restore-Befehle
-  ausfuehren.
-- **Per-Spieler-Settings** persistieren (Preview-Toggle).
-- **Befehle**: `/restoreInv 1|2|3`, `/restoreInv save`, `/restoreInv config`,
-  **`/restoreInv version`**.
+- **Tooltips mit Zeitstempel** plus Item-Anzahl und das beste Tool ("Top-Tool").
+- **Pin-Funktion**: Rechtsklick auf einen Save schuetzt ihn vor Ueberschreiben.
+- **Konfigurierbare Saves pro Slot** (1..9) - greift sofort auf bestehende Saves.
+- **Restore-Sound** (an/aus) und **Per-Spieler-Settings**.
+- **Mehrsprachig (i18n)**: Englisch als Default, Deutsch mitgeliefert
+  (`assets/restoreinv/lang/*.json`). Weitere Sprachen per Resourcepack moeglich.
+- **Asynchrones Speichern**: NBT-Serialisierung und Datei-I/O laufen abseits des
+  Server-Threads (keine TPS-Spikes bei vielen Spielern).
+- **Editierbare Config** als `config/restoreinv.json` (mit Migration aus altem
+  binaeren `restoreinv/config.dat`).
+
+### Rechte / Permissions
+
+Standardmaessig ueber Vanilla-OP (Level 2), optional ueber
+[fabric-permissions-api](https://github.com/lucko/fabric-permissions-api):
+
+| Node                 | Wirkung                                                      |
+| -------------------- | ----------------------------------------------------------- |
+| `restoreinv.admin`   | Config-GUI, Admin-Panel, fremde Inventare wiederherstellen  |
+| `restoreinv.restore` | Eigenes Inventar wiederherstellen (`/restoreinv 1..4`, undo)|
+
+Ist die Lib nicht installiert, gilt der OP-Fallback. `/restoreinv config` und das
+Admin-Panel sind so **nie** fuer normale Spieler zugaenglich.
+
+### Befehle
+
+| Befehl                       | Wirkung                                            |
+| ---------------------------- | -------------------------------------------------- |
+| `/restoreinv 1\|2\|3\|4`     | Restore aus Auto-kurz / Auto-lang / Manuell / Tod  |
+| `/restoreinv save`           | Inventar in den Manuell-Slot speichern             |
+| `/restoreinv undo`           | Letzte Wiederherstellung rueckgaengig machen       |
+| `/restoreinv saves`          | Eigene Save-Liste (GUI) oeffnen                    |
+| `/restoreinv config`         | Config-GUI oeffnen (nur Admins)                    |
+| `/restoreinv version`        | Mod- und MC-Version anzeigen                       |
+
+Aliase: **`/rinv`** (kurz) und **`/restoreInv`** (alter Name, Abwaertskompatibilitaet).
 
 ## Unterstuetzte Versionen
 
-Die Mod wird fuer mehrere Minecraft-Versionen parallel gebaut. Jede Version
-hat ihre eigene JAR im Release.
+Das Release enthaelt **drei JARs** — je eine deckt einen ganzen Versionsbereich ab.
+Lade einfach die JAR, deren Bereich deine MC-Version enthaelt:
 
-| Minecraft | Source-Tree         | JAR-Name                                    |
-| --------- | ------------------- | ------------------------------------------- |
-| 1.21      | `shared/api-old/`   | `RestoreInventory-mc1.21-<version>.jar`     |
-| 1.21.1    | `shared/api-old/`   | `RestoreInventory-mc1.21.1-<version>.jar`   |
-| 1.21.2    | `shared/api-old/`   | `RestoreInventory-mc1.21.2-<version>.jar`   |
-| 1.21.3    | `shared/api-old/`   | `RestoreInventory-mc1.21.3-<version>.jar`   |
-| 1.21.4    | `shared/api-old/`   | `RestoreInventory-mc1.21.4-<version>.jar`   |
-| 1.21.9    | `shared/api-new/`   | `RestoreInventory-mc1.21.9-<version>.jar`   |
-| 1.21.10   | `shared/api-new/`   | `RestoreInventory-mc1.21.10-<version>.jar`  |
-| 1.21.11   | `shared/api-new/`   | `RestoreInventory-mc1.21.11-<version>.jar`  |
+| Release-JAR                                 | Deckt ab          | Compat-Tree       |
+| ------------------------------------------- | ----------------- | ----------------- |
+| `RestoreInventory-mc1.21-1.21.1-<v>.jar`    | 1.21 - 1.21.1     | `shared/api-old/` |
+| `RestoreInventory-mc1.21.2-1.21.4-<v>.jar`  | 1.21.2 - 1.21.4   | `shared/api-old/` |
+| `RestoreInventory-mc1.21.9-1.21.11-<v>.jar` | 1.21.9 - 1.21.11  | `shared/api-new/` |
 
-Die Luecke 1.21.5 bis 1.21.8 wird derzeit nicht unterstuetzt - dort gibt es
-mehrere harte API-Brueche (vor allem im NBT-/Storage-API), die einen eigenen
-Source-Tree erfordern wuerden. Bei Bedarf kann das nachgezogen werden.
+Die `fabric.mod.json` jeder JAR deklariert den passenden `minecraft`-Bereich. Eine
+einzelne JAR fuer **alles** ist nicht moeglich: zwischen 1.21.4 und 1.21.9 gibt es einen
+harten NBT-/Storage-API-Bruch (`Inventories.writeNbt` -> `WriteView`). Die alte Familie
+wird zusaetzlich bei **1.21.2** geteilt (groesstes Update der Reihe). Die Luecke
+1.21.5 - 1.21.8 ist nicht unterstuetzt.
+
+Der gesamte Code liegt einmalig in `shared/common`; pro API-Familie gibt es nur eine
+`PlatformCompat`-Klasse, die die versionsspezifischen API-Unterschiede
+(NBT-Serialisierung, Armor-Zugriff, Registry-/Server-Lookup) kapselt.
+
+**Build-Matrix:** Neben den drei Umbrella-Builds (`versions/old1`, `versions/old2`,
+`versions/new`) existieren weiterhin 8 Per-Version-Subprojekte (`versions/1.21` ...
+`versions/1.21.11`). Diese werden mitgebaut, dienen aber nur als **Compile-Frühwarnung**
+pro Version und landen **nicht** im Release.
+
+## Gespeicherte Daten & Mod-Updates
+
+Alle Saves liegen im **Server-/Spielordner**, nicht in der JAR:
+
+- `restoreinv/<uuid>/slot_n.dat` + `restoreinv/<uuid>/last_saves.dat` (Inventare, NBT)
+- `config/restoreinv.json` (globale Konfiguration)
+
+Ein **Mod-Update** (JAR austauschen) **loescht diese Daten nicht** — gespeicherte Slots
+bleiben erhalten. Die Dateien tragen einen `format`-Marker; aeltere Daten werden
+abwaertskompatibel gelesen, und der Save-Ordner wird nie geloescht.
+
+> Hinweis: Wechselt man auf **derselben Welt** ueber die Familiengrenze hinweg (alte JAR
+> 1.21.x ↔ neue JAR 1.21.9+), koennen Items beim Wiederherstellen verrutschen, da sich das
+> interne Inventar-Layout zwischen den MC-Generationen unterscheidet. Innerhalb einer
+> Familie (normaler Update-Pfad) bleibt alles unveraendert erhalten.
 
 ## Repo-Struktur
 
 ```
 .
 ├── shared/
-│   ├── api-old/               # Quelltext fuer Minecraft 1.21.x mit alter API
+│   ├── common/                # GESAMTER gemeinsamer Code (Logik + GUIs + lang/)
 │   │   ├── src/main/java/...
 │   │   └── src/main/resources/
-│   └── api-new/               # Quelltext fuer Minecraft 1.21.9+ (neue API)
+│   ├── api-old/               # NUR PlatformCompat fuer 1.21 - 1.21.4 (alte NBT-API)
+│   │   └── src/main/java/.../PlatformCompat.java
+│   └── api-new/               # NUR PlatformCompat fuer 1.21.9+ (neue NBT-API)
+│       └── src/main/java/.../PlatformCompat.java
 ├── versions/
 │   ├── 1.21/                  # Subprojekt (gradle.properties + build.gradle)
 │   ├── 1.21.1/
@@ -110,15 +164,6 @@ python update_fabric.py            # alle Subprojekte aktualisieren
 python update_fabric.py 1.21.11    # nur eine Version
 python update_fabric.py --dry-run
 ```
-
-## In-Game-Befehle
-
-| Befehl                   | Wirkung                                                     |
-| ------------------------ | ----------------------------------------------------------- |
-| `/restoreInv 1\|2\|3`    | Stellt das Inventar aus dem entsprechenden Slot wieder her  |
-| `/restoreInv save`       | Speichert das Inventar in Slot 3                            |
-| `/restoreInv config`     | Oeffnet die Config-GUI                                      |
-| `/restoreInv version`    | Zeigt Mod- und MC-Version                                   |
 
 ## Release-Workflow
 

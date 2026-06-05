@@ -32,45 +32,50 @@ public class PlayerSavesScreenHandler extends GenericContainerScreenHandler {
 
     private void populate() {
         List<List<RestoreInvStorage.Save>> saves = storage.getLastSaves(targetUuid);
-        for (int slot = 0; slot < 3; slot++) {
+        for (int slot = 0; slot < RestoreInvStorage.SLOTS; slot++) {
             ItemStack icon = new ItemStack(Items.CHEST);
             List<RestoreInvStorage.Save> savesList = saves != null && slot < saves.size()
                     ? saves.get(slot) : new ArrayList<>();
             if (!savesList.isEmpty()) {
                 RestoreInvStorage.Save latest = savesList.get(0);
-                String when = RestoreInvStorage.formatRelativeTime(latest.timestampMillis);
+                Text when = RestoreInvStorage.formatRelativeTime(latest.timestampMillis);
                 int items = RestoreInvStorage.countNonEmpty(latest.stacks);
                 icon.set(DataComponentTypes.CUSTOM_NAME,
-                        Text.literal("Slot " + (slot + 1) + " - letzter Save"));
+                        Text.translatable("restoreinv.gui.latest_save", RestoreInvStorage.slotName(slot)));
                 icon.set(DataComponentTypes.LORE, new LoreComponent(List.of(
-                        Text.literal(when),
-                        Text.literal(items + " Items"),
+                        when,
+                        Text.translatable("restoreinv.gui.items_short", items),
                         Text.literal(""),
-                        Text.literal("Klicke fuer Vorschau"))));
+                        Text.translatable("restoreinv.gui.click_preview_simple"))));
             } else {
-                icon.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Slot " + (slot + 1)));
+                icon.set(DataComponentTypes.CUSTOM_NAME, RestoreInvStorage.slotName(slot));
                 icon.set(DataComponentTypes.LORE, new LoreComponent(List.of(
-                        Text.literal("(leer)"))));
+                        Text.translatable("restoreinv.gui.empty"))));
             }
             this.getInventory().setStack(slot, icon);
         }
         ItemStack back = new ItemStack(Items.ARROW);
-        back.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Zurueck"));
+        back.set(DataComponentTypes.CUSTOM_NAME, Text.translatable("restoreinv.gui.back"));
         this.getInventory().setStack(8, back);
     }
 
     @Override
     public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
+        // Fremde Spieler-Saves -> rein administrativ.
+        if (!(player instanceof net.minecraft.server.network.ServerPlayerEntity admin)
+                || !PermissionGate.canAdminister(admin)) {
+            return;
+        }
         ItemStack clicked = this.getInventory().getStack(slotIndex);
         if (clicked.getItem() == Items.ARROW) {
             if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
                 sp.openHandledScreen(new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
                         (syncId, inv, p) -> new AdminPanelScreenHandler(syncId, inv, storage, p),
-                        Text.literal("Admin Panel")));
+                        Text.translatable("restoreinv.gui.admin_panel")));
             }
             return;
         }
-        if (clicked.getItem() == Items.CHEST && slotIndex >= 0 && slotIndex < 3) {
+        if (clicked.getItem() == Items.CHEST && slotIndex >= 0 && slotIndex < RestoreInvStorage.SLOTS) {
             if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
                 final int chosenSlot = slotIndex;
                 final UUID chosenTarget = targetUuid;
@@ -78,7 +83,8 @@ public class PlayerSavesScreenHandler extends GenericContainerScreenHandler {
                         new net.minecraft.screen.SimpleNamedScreenHandlerFactory(
                                 (syncId, inv, p) -> new PreviewRestoreScreenHandler(syncId, inv, storage, p,
                                         chosenSlot, 0, chosenTarget),
-                                Text.literal("Vorschau: Slot " + (chosenSlot + 1) + " fuer Spieler")));
+                                Text.translatable("restoreinv.gui.preview_title_player",
+                                        RestoreInvStorage.slotName(chosenSlot))));
             }
             return;
         }

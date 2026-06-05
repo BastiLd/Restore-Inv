@@ -9,7 +9,11 @@ apply plugin: 'java'
 
 group   = rootProject.mod_group
 version = rootProject.mod_version
-base.archivesName = "${rootProject.mod_archives_name}-mc${project.minecraft_version}"
+
+// Archiv-Label: standardmaessig 'mc<version>' (Per-Version-Builds), aber via
+// 'archive_label'-Property ueberschreibbar (Umbrella-Builds, z. B. mc1.21-1.21.4).
+def mcLabel = project.findProperty('archive_label') ?: "mc${project.minecraft_version}"
+base.archivesName = "${rootProject.mod_archives_name}-${mcLabel}"
 
 repositories {
     maven {
@@ -52,7 +56,7 @@ processResources {
 }
 
 tasks.withType(Jar).configureEach {
-    archiveBaseName.set("${rootProject.mod_archives_name}-mc${project.minecraft_version}")
+    archiveBaseName.set("${rootProject.mod_archives_name}-${mcLabel}")
     archiveVersion.set(rootProject.mod_version)
 
     from(rootProject.file('LICENSE')) {
